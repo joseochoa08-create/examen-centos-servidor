@@ -1,41 +1,36 @@
 # EXAMEN INTERCICLO PRÁCTICO
 ## CONFIGURACIÓN DE SERVIDOR CENTOS STREAM 10
+**Herramientas:** `CENTOS` | `POWERSHELL` | `FILEZILLA`
 
-![CENTOS](https://img.shields.io/badge/EJECUTAR_EN-CENTOS-blue?style=for-the-badge)
-![POWERSHELL](https://img.shields.io/badge/EJECUTAR_EN-POWERSHELL-green?style=for-the-badge)
-![FILEZILLA](https://img.shields.io/badge/EJECUTAR_EN-FILEZILLA-purple?style=for-the-badge)
-
-**Sistema operativo:** CentOS Stream 10  
-**Virtualización:** VirtualBox  
-**Estudiante:** JOSE JULIAN OCHOA  
-**Servidor:** servidor-centos
+* **Sistema operativo:** CentOS Stream 10
+* **Virtualización:** VirtualBox
+* **Estudiante:** JOSE JULIAN OCHOA (`jose_ochoa`)
+* **Servidor:** `servidor-centos`
 
 ### ¿Cómo identificar dónde ejecutar cada instrucción?
-
-- ![CENTOS](https://img.shields.io/badge/CENTOS-Terminal-blue?style=flat-square): ejecutar el comando dentro de la máquina virtual CentOS.
-- ![POWERSHELL](https://img.shields.io/badge/POWERSHELL-Windows-green?style=flat-square): ejecutar el comando en PowerShell de Windows.
-- ![FILEZILLA](https://img.shields.io/badge/FILEZILLA-Cliente_FTP-purple?style=flat-square): realizar la configuración en FileZilla.
+* **CENTOS:** Ejecutar el comando dentro de la máquina virtual CentOS.
+* **POWERSHELL:** Ejecutar el comando en PowerShell de Windows.
+* **FILEZILLA:** Realizar la configuración en la interfaz gráfica de FileZilla.
 
 ---
 
-# 1. PREPARACIÓN DE VIRTUALBOX
+## 1. PREPARACIÓN DE VIRTUALBOX (Configuración Principal)
+Apagar la máquina virtual y configurar la red:
 
-Apagar la máquina virtual y configurar los adaptadores de red:
-
-**Adaptador 1:**
-- Habilitar adaptador.
-- Conectado a: NAT.
-
-**Adaptador 2:**
-- Habilitar adaptador.
-- Conectado a: Adaptador solo-anfitrión (Host-only).
+* **Adaptador 1:**
+  * Habilitar adaptador de red.
+  * Conectado a: **Adaptador puente (Bridged Adapter)**.
+  * Nombre: Seleccionar la tarjeta de red activa de la PC (Wi-Fi o Ethernet).
+* **Adaptador 2:** Deshabilitado.
 
 Iniciar CentOS.
 
-# 2. IDENTIFICACIÓN DEL SERVIDOR
+*(Nota: Si en la universidad el Wi-Fi bloquea la comunicación entre equipos locales, ir al **Plan B** al final de esta guía para usar NAT + Solo-anfitrión).*
 
-![CENTOS](https://img.shields.io/badge/CENTOS-Terminal-blue?style=flat-square)
+---
 
+## 2. IDENTIFICACIÓN DEL SERVIDOR
+**CENTOS**
 ```bash
 cat /etc/centos-release
 whoami
@@ -44,149 +39,115 @@ sudo hostnamectl set-hostname servidor-centos
 ip -br addr
 ip route
 ```
+Identificar la dirección IP asignada a la interfaz principal (ej. `enp0s3`). Esa única dirección (`<IP_DEL_SERVIDOR>`) servirá para salir a Internet y para conectarse desde Windows (SSH, SCP, Apache y FileZilla).
 
-Identificar la dirección IP de la interfaz Host-only. Esa dirección se utilizará desde Windows para conectarse al servidor.
+> **Si la interfaz aparece `DOWN` o sin IP:**
+> ```bash
+> sudo nmcli connection up enp0s3
+> ip -br addr
+> ```
 
-# 3. INSTALACIÓN DE HERRAMIENTAS
+---
 
-![CENTOS](https://img.shields.io/badge/CENTOS-Terminal-blue?style=flat-square)
-
+## 3. INSTALACIÓN DE HERRAMIENTAS
+**CENTOS**
 ```bash
 sudo dnf update -y
 sudo dnf install -y openssh-server openssh-clients httpd vsftpd tree firewalld policycoreutils-python-utils curl
 sudo systemctl enable --now firewalld
 sudo systemctl status firewalld
 ```
+*(Presionar `q` para salir de la pantalla de estado).*
 
-Presionar `q` para salir de la pantalla de estado.
+---
 
-# 4. CONECTIVIDAD A INTERNET Y PING
-
-![CENTOS](https://img.shields.io/badge/CENTOS-Terminal-blue?style=flat-square)
-
+## 4. CONECTIVIDAD A INTERNET Y PING
+**CENTOS**
 ```bash
 ping -c 10 8.8.8.8
 ping -c 10 google.com
 ```
+La opción `-c 10` envía diez paquetes para comprobar la conectividad hacia Internet.
 
-La opción `-c 10` envía diez paquetes para comprobar la conectividad.
+---
 
-# 5. CONFIGURACIÓN DEL SERVIDOR SSH
+## 5. CONFIGURACIÓN DEL SERVIDOR SSH
 
-## 5.1. Activar SSH
-
-![CENTOS](https://img.shields.io/badge/CENTOS-Terminal-blue?style=flat-square)
-
+### 5.1. Activar SSH
+**CENTOS**
 ```bash
 sudo systemctl enable --now sshd
 sudo systemctl status sshd
 ```
 
-## 5.2. Crear copia de seguridad
-
-![CENTOS](https://img.shields.io/badge/CENTOS-Terminal-blue?style=flat-square)
-
+### 5.2. Crear copia de seguridad
+**CENTOS**
 ```bash
 sudo cp -a /etc/ssh/sshd_config /etc/ssh/sshd_config.backup
 ```
 
-## 5.3. Cambiar el puerto SSH
-
-![CENTOS](https://img.shields.io/badge/CENTOS-Terminal-blue?style=flat-square)
-
+### 5.3. Cambiar el puerto SSH
+**CENTOS**
 ```bash
 sudo nano /etc/ssh/sshd_config
 ```
-
-Configurar el puerto:
-
+Configurar el puerto personalizado (quitar `#` o ajustar la línea `Port 22` para evitar conflictos):
 ```text
-Port 2222
+Port <PUERTO>
 ```
+*(Ejemplo: `Port 2222`).* Guardar con `Ctrl + O`, `Enter` y salir con `Ctrl + X`.
 
-Si existe una línea activa `Port 22`, comentarla o ajustarla para evitar conflictos.
-
-Guardar con `Ctrl + O`, `Enter` y salir con `Ctrl + X`.
-
-## 5.4. Configurar SELinux
-
-![CENTOS](https://img.shields.io/badge/CENTOS-Terminal-blue?style=flat-square)
-
+### 5.4. Configurar SELinux
+**CENTOS**
 ```bash
 sudo semanage port -l | grep ssh_port_t
 ```
-
-Si el puerto 2222 no aparece asociado a SSH:
-
+Si el puerto `<PUERTO>` no aparece asociado a SSH:
 ```bash
-sudo semanage port -a -t ssh_port_t -p tcp 2222
+sudo semanage port -a -t ssh_port_t -p tcp <PUERTO>
 ```
+*(Si ya aparece asociado a `ssh_port_t`, no repetir el comando).*
 
-Si ya aparece asociado a `ssh_port_t`, no repetir el comando.
-
-## 5.5. Abrir el puerto en el firewall
-
+### 5.5. Abrir el puerto en el firewall
 Consultar las zonas activas:
-
-![CENTOS](https://img.shields.io/badge/CENTOS-Terminal-blue?style=flat-square)
-
+**CENTOS**
 ```bash
 sudo firewall-cmd --get-active-zones
 ```
-
-Sustituir `<ZONA>` por la zona correspondiente a la interfaz Host-only:
-
+Sustituir `<ZONA>` por la zona activa (normalmente `public`):
 ```bash
-sudo firewall-cmd --permanent --zone=<ZONA> --add-port=2222/tcp
+sudo firewall-cmd --permanent --zone=<ZONA> --add-port=<PUERTO>/tcp
 sudo firewall-cmd --reload
 ```
 
-## 5.6. Validar y reiniciar SSH
-
-![CENTOS](https://img.shields.io/badge/CENTOS-Terminal-blue?style=flat-square)
-
+### 5.6. Validar y reiniciar SSH
+**CENTOS**
 ```bash
 sudo sshd -t
 sudo systemctl restart sshd
-sudo ss -tlnp | grep 2222
+sudo ss -tlnp | grep <PUERTO>
 ```
 
-## 5.7. Probar conexión desde Windows
-
-![POWERSHELL](https://img.shields.io/badge/POWERSHELL-Windows-green?style=flat-square)
-
+### 5.7. Probar conexión desde Windows
+**POWERSHELL**
 ```powershell
-ssh -p 2222 USUARIO@IP_DEL_SERVIDOR
+ssh -p <PUERTO> <USUARIO>@<IP_DEL_SERVIDOR>
 ```
+*(Ejemplo: `ssh -p 2222 jochoa@192.168.0.9`).* Sustituir el usuario, puerto e IP por los datos reales. Tomar captura de pantalla y escribir `exit` para volver a Windows.
 
-Ejemplo:
+---
 
-```powershell
-ssh -p 2222 jose@192.168.56.101
-```
+## 6. TRANSFERENCIA DE ARCHIVOS CON SCP
 
-Sustituir el usuario y la IP por los datos reales.
-
-# 6. TRANSFERENCIA DE ARCHIVOS CON SCP
-
-## 6.1. Comprobar SCP en Windows
-
-![POWERSHELL](https://img.shields.io/badge/POWERSHELL-Windows-green?style=flat-square)
-
+### 6.1. Comprobar SCP en Windows
+**POWERSHELL**
 ```powershell
 Get-Command scp
 ```
+*(Si no está instalado, abrir PowerShell como administrador y ejecutar: `Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0`).*
 
-Si no está instalado, abrir PowerShell como administrador:
-
-```powershell
-Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0
-```
-
-## 6.2. Crear archivo en Windows
-
-![POWERSHELL](https://img.shields.io/badge/POWERSHELL-Windows-green?style=flat-square)
-
+### 6.2. Crear archivo en Windows
+**POWERSHELL**
 ```powershell
 New-Item -ItemType Directory -Force C:\prueba-scp
 Set-Location C:\prueba-scp
@@ -194,105 +155,85 @@ Set-Location C:\prueba-scp
 Get-ChildItem
 ```
 
-## 6.3. Enviar archivo a CentOS
-
-![POWERSHELL](https://img.shields.io/badge/POWERSHELL-Windows-green?style=flat-square)
-
+### 6.3. Enviar archivo a CentOS
+**POWERSHELL** *(Nota: `-P` en mayúscula)*
 ```powershell
-scp -P 2222 C:\prueba-scp\prueba.txt USUARIO@IP_DEL_SERVIDOR:/home/USUARIO/
+scp -P <PUERTO> C:\prueba-scp\prueba.txt <USUARIO>@<IP_DEL_SERVIDOR>:/home/<USUARIO>/
 ```
 
-## 6.4. Comprobar archivo recibido
-
-![CENTOS](https://img.shields.io/badge/CENTOS-Terminal-blue?style=flat-square)
-
+### 6.4. Comprobar archivo recibido
+**CENTOS**
 ```bash
-ls -l /home/USUARIO/
-cat /home/USUARIO/prueba.txt
+ls -l /home/<USUARIO>/
+cat /home/<USUARIO>/prueba.txt
 ```
 
-## 6.5. Descargar archivo a Windows
-
-![POWERSHELL](https://img.shields.io/badge/POWERSHELL-Windows-green?style=flat-square)
-
+### 6.5. Descargar archivo a Windows
+**POWERSHELL**
 ```powershell
-scp -P 2222 USUARIO@IP_DEL_SERVIDOR:/home/USUARIO/prueba.txt C:\prueba-scp\
+scp -P <PUERTO> <USUARIO>@<IP_DEL_SERVIDOR>:/home/<USUARIO>/prueba.txt C:\prueba-scp\prueba_descargada.txt
 Get-ChildItem C:\prueba-scp
 ```
 
-# 7. ESTRUCTURA DE DIRECTORIOS DE LINUX
+---
 
-## 7.1. Instalar tree
+## 7. ESTRUCTURA DE DIRECTORIOS DE LINUX
 
-![CENTOS](https://img.shields.io/badge/CENTOS-Terminal-blue?style=flat-square)
-
-```bash
-sudo dnf install -y tree
-```
-
-## 7.2. Mostrar estructura de directorios
-
-![CENTOS](https://img.shields.io/badge/CENTOS-Terminal-blue?style=flat-square)
-
+### 7.1. Mostrar estructura de directorios
+**CENTOS**
 ```bash
 sudo tree -L 2 -d /
 ```
 
-## 7.3. Función de los directorios
+### 7.2. Función de los directorios principales
 
 | Directorio | Función |
-|---|---|
-| `/` | Directorio raíz. |
-| `/bin` | Comandos esenciales. |
-| `/boot` | Archivos de arranque. |
-| `/dev` | Archivos de dispositivos. |
-| `/etc` | Configuraciones del sistema. |
-| `/home` | Carpetas personales. |
-| `/root` | Carpeta del administrador. |
-| `/lib` | Bibliotecas del sistema. |
-| `/media` | Montaje de medios extraíbles. |
-| `/mnt` | Montaje temporal. |
-| `/opt` | Software adicional. |
-| `/proc` | Información de procesos y sistema. |
-| `/run` | Datos temporales de ejecución. |
-| `/srv` | Datos de servicios. |
+| :--- | :--- |
+| `/` | Directorio raíz del sistema. |
+| `/bin` | Comandos y binarios esenciales. |
+| `/boot` | Archivos de arranque y kernel. |
+| `/dev` | Archivos de dispositivos de hardware. |
+| `/etc` | Archivos de configuración del sistema. |
+| `/home` | Carpetas personales de los usuarios. |
+| `/root` | Carpeta personal del administrador (`root`). |
+| `/lib` | Bibliotecas esenciales del sistema. |
+| `/media` | Montaje automático de medios extraíbles. |
+| `/mnt` | Punto de montaje temporal. |
+| `/opt` | Software adicional de terceros. |
+| `/proc` | Información virtual de procesos y kernel. |
+| `/run` | Datos temporales de ejecución del sistema. |
+| `/srv` | Datos de servicios alojados en el servidor. |
 | `/tmp` | Archivos temporales. |
-| `/usr` | Programas y recursos. |
-| `/var` | Registros y datos variables. |
+| `/usr` | Programas, librerías y recursos de usuario. |
+| `/var` | Registros (`logs`) y datos variables. |
 
-Nota: en CentOS moderno, algunos directorios pueden ser enlaces simbólicos hacia directorios dentro de `/usr`.
+*(Nota: En CentOS moderno, directorios como `/bin` y `/lib` son enlaces simbólicos hacia `/usr`).*
 
-# 8. INSTALACIÓN Y CONFIGURACIÓN DE APACHE
+---
 
-## 8.1. Instalar Apache y crear copia de seguridad
+## 8. INSTALACIÓN Y CONFIGURACIÓN DE APACHE
 
-![CENTOS](https://img.shields.io/badge/CENTOS-Terminal-blue?style=flat-square)
-
+### 8.1. Instalar Apache y crear copia de seguridad
+**CENTOS**
 ```bash
 sudo dnf install -y httpd
 sudo cp -a /etc/httpd/conf/httpd.conf /etc/httpd/conf/httpd.conf.backup
 sudo systemctl enable --now httpd
 ```
 
-## 8.2. Permitir HTTP en el firewall
-
-![CENTOS](https://img.shields.io/badge/CENTOS-Terminal-blue?style=flat-square)
-
+### 8.2. Permitir HTTP en el firewall
+**CENTOS**
 ```bash
 sudo firewall-cmd --permanent --zone=<ZONA> --add-service=http
 sudo firewall-cmd --reload
 ```
 
-## 8.3. Crear la página web
-
-![CENTOS](https://img.shields.io/badge/CENTOS-Terminal-blue?style=flat-square)
-
+### 8.3. Crear la página web personalizada
+**CENTOS**
 ```bash
 sudo nano /var/www/html/index.html
 ```
-
-Contenido de la página:
-
+Contenido de la página (incluye `nombre_apellido` según rúbrica):
 ```html
 <!DOCTYPE html>
 <html lang="es">
@@ -302,79 +243,53 @@ Contenido de la página:
 </head>
 <body>
     <h1>Servidor Apache funcionando correctamente</h1>
-    <h2>Estudiante: JOSE JULIAN OCHOA</h2>
+    <h2>Estudiante: JOSE JULIAN OCHOA (jose_ochoa)</h2>
     <p>Sistema operativo: CentOS Stream 10</p>
     <p>Práctica de configuración de servidor web.</p>
 </body>
 </html>
 ```
+Guardar con `Ctrl + O`, `Enter` y salir con `Ctrl + X`.
 
-Guardar con `Ctrl + O`, `Enter` y `Ctrl + X`.
-
-## 8.4. Aplicar seguridad y reiniciar Apache
-
-![CENTOS](https://img.shields.io/badge/CENTOS-Terminal-blue?style=flat-square)
-
+### 8.4. Aplicar seguridad y reiniciar Apache
+**CENTOS**
 ```bash
 sudo restorecon -Rv /var/www/html
 sudo systemctl restart httpd
 curl http://localhost
 ```
 
-## 8.5. Probar página desde Windows
-
-![POWERSHELL](https://img.shields.io/badge/POWERSHELL-Windows-green?style=flat-square)
-
-Abrir el navegador de Windows y escribir:
-
+### 8.5. Probar página desde Windows
+Abrir el navegador en Windows y escribir:
 ```text
-http://IP_DEL_SERVIDOR
+http://<IP_DEL_SERVIDOR>
 ```
 
-Ejemplo:
+---
 
-```text
-http://192.168.56.101
-```
+## 9. INSTALACIÓN Y CONFIGURACIÓN DE FTP
 
-Debe aparecer la página creada.
-
-# 9. INSTALACIÓN Y CONFIGURACIÓN DE FTP
-
-## 9.1. Instalar FTP y guardar configuración original
-
-![CENTOS](https://img.shields.io/badge/CENTOS-Terminal-blue?style=flat-square)
-
+### 9.1. Instalar FTP y guardar la configuración original
+**CENTOS**
 ```bash
 sudo dnf install -y vsftpd
 sudo cp -a /etc/vsftpd/vsftpd.conf /etc/vsftpd/vsftpd.conf.backup
 ```
 
-## 9.2. Crear usuario FTP
-
-![CENTOS](https://img.shields.io/badge/CENTOS-Terminal-blue?style=flat-square)
-
+### 9.2. Crear usuario FTP
+**CENTOS**
 ```bash
 sudo useradd -m ftpusuario
 sudo passwd ftpusuario
 ```
+*(Comprobar usuario con `id ftpusuario`).*
 
-Si el usuario ya existe, comprobarlo:
-
-```bash
-id ftpusuario
-```
-
-## 9.3. Configurar vsftpd
-
-![CENTOS](https://img.shields.io/badge/CENTOS-Terminal-blue?style=flat-square)
-
+### 9.3. Configurar `vsftpd`
+**CENTOS**
 ```bash
 sudo nano /etc/vsftpd/vsftpd.conf
 ```
-
-Comprobar que estas directivas tengan estos valores. Modificar las existentes, sin duplicarlas:
-
+Comprobar que estas directivas tengan estos valores (modificar las existentes, **sin duplicarlas**, especialmente `listen` y `listen_ipv6`):
 ```text
 anonymous_enable=NO
 local_enable=YES
@@ -388,204 +303,82 @@ pasv_enable=YES
 pasv_min_port=30000
 pasv_max_port=30100
 ```
+Guardar con `Ctrl + O`, `Enter` y salir con `Ctrl + X`.
 
-Guardar con `Ctrl + O`, `Enter` y `Ctrl + X`.
-
-## 9.4. Configurar SELinux
-
-![CENTOS](https://img.shields.io/badge/CENTOS-Terminal-blue?style=flat-square)
-
+### 9.4. Configurar SELinux (CentOS Stream 10)
+**CENTOS**
 ```bash
-sudo setsebool -P ftp_home_dir on
-getsebool ftp_home_dir
+sudo setsebool -P ftpd_full_access on
+getsebool ftpd_full_access
 ```
+Debe aparecer: `ftpd_full_access --> on`.
 
-Debe aparecer:
-
-```text
-ftp_home_dir --> on
-```
-
-## 9.5. Abrir puertos en el firewall
-
-![CENTOS](https://img.shields.io/badge/CENTOS-Terminal-blue?style=flat-square)
-
+### 9.5. Abrir puertos en el firewall
+**CENTOS**
 ```bash
 sudo firewall-cmd --permanent --zone=<ZONA> --add-service=ftp
 sudo firewall-cmd --permanent --zone=<ZONA> --add-port=30000-30100/tcp
 sudo firewall-cmd --reload
 ```
 
-## 9.6. Activar FTP
-
-![CENTOS](https://img.shields.io/badge/CENTOS-Terminal-blue?style=flat-square)
-
+### 9.6. Activar FTP
+**CENTOS**
 ```bash
 sudo systemctl enable --now vsftpd
 sudo systemctl restart vsftpd
 sudo systemctl status vsftpd
 sudo ss -tlnp | grep ':21'
 ```
+(Presionar q para salir).
 
-Presionar `q` para salir.
+10. CONEXIÓN Y TRANSFERENCIA CON FILEZILLA
 
-# 10. CONEXIÓN Y TRANSFERENCIA CON FILEZILLA
+FILEZILLA
+Abrir FileZilla en Windows y configurar la barra de conexión rápida:
 
-![FILEZILLA](https://img.shields.io/badge/FILEZILLA-Cliente_FTP-purple?style=flat-square)
+Campo	Valor
+Protocolo	FTP (en Gestor de Sitios: Usar FTP plano / sin cifrado)
+Servidor	<IP_DEL_SERVIDOR>
+Puerto	21
+Modo de acceso	Normal
+Usuario	ftpusuario
+Contraseña	Contraseña creada para ftpusuario
 
-Abrir FileZilla en Windows y configurar:
+(Si da error al listar carpetas, ir a Edición > Opciones > FTP y confirmar que esté marcado Pasivo).
 
-| Campo | Valor |
-|---|---|
-| Protocolo | FTP |
-| Servidor | IP Host-only de CentOS |
-| Puerto | 21 |
-| Modo de acceso | Normal |
-| Usuario | ftpusuario |
-| Contraseña | Contraseña creada para ftpusuario |
-
-Seleccionar FTP simple sin cifrado únicamente para esta práctica dentro de la red Host-only aislada. No utilizar FTP simple para información sensible en Internet.
-
-Utilizar el modo de transferencia pasivo.
-
-## 10.1. Subir un archivo
+10.1. Subir un archivo
 
 1. Buscar un archivo en el panel izquierdo (Windows).
-2. En el panel derecho localizar la carpeta del usuario FTP.
-3. Arrastrar el archivo desde Windows hacia CentOS.
-4. Comprobar que la transferencia finalizó.
+2. En el panel derecho localizar la carpeta del usuario FTP (/home/ftpusuario).
+3. Arrastrar el archivo desde Windows hacia CentOS y verificar la transferencia.
 
-## 10.2. Descargar un archivo
+10.2. Descargar un archivo
 
 1. Seleccionar un archivo en el panel derecho (CentOS).
 2. Elegir una carpeta de destino en el panel izquierdo (Windows).
-3. Arrastrar el archivo hacia Windows.
-4. Comprobar que se descargó.
+3. Arrastrar el archivo hacia Windows y comprobar que se descargó.
 
-# 11. COMPROBAR COPIAS DE SEGURIDAD
+11. COMPROBAR COPIAS DE SEGURIDAD Y ESTADO FINAL
 
-![CENTOS](https://img.shields.io/badge/CENTOS-Terminal-blue?style=flat-square)
+CENTOS
+bash sudo ls -l /etc/ssh/sshd_config.backup /etc/httpd/conf/httpd.conf.backup /etc/vsftpd/vsftpd.conf.backup sudo systemctl status sshd httpd vsftpd firewalld sudo ss -tlnp 
 
-```bash
-sudo ls -l /etc/ssh/sshd_config.backup
-sudo ls -l /etc/httpd/conf/httpd.conf.backup
-sudo ls -l /etc/vsftpd/vsftpd.conf.backup
-```
+Lista de verificación de evidencias:
 
-# 12. COMPROBACIÓN FINAL
+• Conectividad: Ping de 10 paquetes (ping -c 10 8.8.8.8).
+• SSH: Acceso remoto desde Windows usando IP y puerto personalizado (<PUERTO>).
+• SCP: Envío de archivo de Windows a CentOS y descarga de CentOS a Windows.
+• Estructura: Comando tree desde / y explicación de directorios.
+• Apache: Página web visible desde navegador de Windows con nombre_apellido.
+• FTP: Conexión en FileZilla con usuario/contraseña, subida y descarga de archivos.
 
-![CENTOS](https://img.shields.io/badge/CENTOS-Terminal-blue?style=flat-square)
+PLAN B: SI EL WI-FI DE LA UNIVERSIDAD BLOQUEA EL MODO PUENTE
 
-```bash
-sudo systemctl status sshd
-sudo systemctl status httpd
-sudo systemctl status vsftpd
-sudo systemctl status firewalld
-sudo ss -tlnp
-```
-
-Presionar `q` para salir de las pantallas de estado.
-
-Resultados esperados:
-
-- Internet funcionando.
-- Ping de diez paquetes.
-- SSH funcionando por el puerto 2222.
-- SCP enviando y descargando archivos.
-- Estructura de directorios visible.
-- Apache mostrando la página personalizada.
-- FTP conectado mediante FileZilla.
-- Subida y descarga FTP funcionando.
-- Copias de seguridad creadas.
-
-# 13. SOLUCIÓN DE ERRORES COMUNES
-
-## Error: CentOS no tiene Internet
-
-![CENTOS](https://img.shields.io/badge/CENTOS-Terminal-blue?style=flat-square)
-
-```bash
-ip -br addr
-ip route
-nmcli device status
-```
-
-Comprobar que el Adaptador 1 de VirtualBox esté en NAT.
-
-## Error: SSH no funciona
-
-![CENTOS](https://img.shields.io/badge/CENTOS-Terminal-blue?style=flat-square)
-
-```bash
-sudo systemctl status sshd
-sudo sshd -t
-sudo ss -tlnp | grep 2222
-sudo firewall-cmd --get-active-zones
-sudo firewall-cmd --list-all
-```
-
-## Error: SCP no funciona
-
-![POWERSHELL](https://img.shields.io/badge/POWERSHELL-Windows-green?style=flat-square)
-
-```powershell
-Get-ChildItem C:\prueba-scp
-```
-
-Comprobar que SSH funciona, que el usuario es correcto y que la IP corresponde a la interfaz Host-only.
-
-## Error: Apache no muestra la página
-
-![CENTOS](https://img.shields.io/badge/CENTOS-Terminal-blue?style=flat-square)
-
-```bash
-sudo systemctl status httpd
-sudo apachectl configtest
-sudo firewall-cmd --list-all
-sudo systemctl restart httpd
-```
-
-## Error: FTP no funciona
-
-![CENTOS](https://img.shields.io/badge/CENTOS-Terminal-blue?style=flat-square)
-
-```bash
-sudo systemctl status vsftpd
-sudo ss -tlnp | grep ':21'
-getsebool ftp_home_dir
-sudo firewall-cmd --list-all
-id ftpusuario
-```
-
-## Error: Windows no se conecta con CentOS
-
-![CENTOS](https://img.shields.io/badge/CENTOS-Terminal-blue?style=flat-square)
-
-```bash
-ip -br addr
-```
-
-Verificar que Windows y CentOS estén conectados a la misma red Host-only y utilizar la IP correcta.
-
-# 14. CONCLUSIÓN
-
-Durante esta práctica se instaló y configuró un servidor CentOS Stream 10 en VirtualBox. Se comprobó la conectividad a Internet, se configuró SSH, se realizaron transferencias mediante SCP, se examinó la estructura de directorios de Linux y se instaló Apache. Finalmente, se configuró FTP y se comprobó la transferencia de archivos mediante FileZilla.
-
-La práctica permitió aplicar comandos de administración de Linux y comprobar el funcionamiento de diferentes servicios de red.
-
----
-
-# RECOMENDACIONES PARA EL EXAMEN
-
-1. Seguir todos los apartados en orden.
-2. Ejecutar cada comando en el lugar indicado por su distintivo.
-3. Sustituir `USUARIO` por el usuario real de CentOS.
-4. Sustituir `IP_DEL_SERVIDOR` por la IP Host-only real.
-5. Sustituir `<ZONA>` por la zona real de la interfaz Host-only.
-6. No cerrar la sesión original antes de comprobar SSH.
-7. Realizar las pruebas desde Windows.
-8. Conservar las copias de seguridad.
-9. Si un comando presenta un error, detenerse y revisar el mensaje.
-10. Mantener CentOS encendido mientras se realizan las pruebas.
-
-**GitHub es la guía de consulta. Los comandos se ejecutan en CentOS y Windows, y las transferencias FTP se comprueban en FileZilla.**
+Si al usar Adaptador Puente tienes internet (ping 8.8.8.8), pero Windows no logra conectarse por SSH/Apache/FileZilla a la IP de CentOS:
+1. Apagar CentOS y en VirtualBox configurar:
+	• Adaptador 1: Habilitado > NAT (para internet).
+	• Adaptador 2: Habilitado > Adaptador solo-anfitrión (Host-only) (para Windows).
+2. Encender CentOS y revisar la IP de la segunda interfaz (enp0s8) con ip -br addr.
+3. Si enp0s8 aparece sin IPv4, asignarle una fija:
+   bash sudo nmcli connection modify enp0s8 ipv4.method manual ipv4.addresses 192.168.56.101/24 sudo nmcli connection up enp0s8    
+4. Usar 192.168.56.101 como <IP_DEL_SERVIDOR> desde Windows (SSH, SCP, Navegador y FileZilla).
