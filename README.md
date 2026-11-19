@@ -54,7 +54,6 @@ ping -c 10 8.8.8.8
 > **CENTOS** — Abrir el archivo, cambiar `Port 22` por `Port <PUERTO>` (ej. `Port 2222`), guardar con `Ctrl + O`, `Enter` y salir con `Ctrl + X`.
 
 ```bash
-sudo cp -a /etc/ssh/sshd_config /etc/ssh/sshd_config.backup
 sudo nano /etc/ssh/sshd_config
 ```
 
