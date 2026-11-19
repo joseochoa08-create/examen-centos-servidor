@@ -86,19 +86,24 @@ ssh -p TU_PUERTO TU_USUARIO@TU_IP
 > [!NOTE]
 > **POWERSHELL** — Nota que en `scp` se usa **`-P` mayúscula**. Toma captura de ambas transferencias al `100%`.
 
+### 3.1. Crear archivo de prueba en Windows
 ```powershell
 New-Item -ItemType Directory -Force C:\prueba-scp
 Set-Location C:\prueba-scp
 "Archivo de prueba" | Out-File -Encoding utf8 prueba.txt
+```
 
-# 1. Subir de Windows a CentOS:
+### 3.2. Subir archivo de Windows a CentOS (Ejecutar primero)
+```powershell
 scp -P TU_PUERTO C:\prueba-scp\prueba.txt TU_USUARIO@TU_IP:/home/TU_USUARIO/
+```
 
-# 2. Descargar de CentOS a Windows:
+### 3.3. Descargar archivo de CentOS a Windows (Ejecutar segundo)
+```powershell
 scp -P TU_PUERTO TU_USUARIO@TU_IP:/home/TU_USUARIO/prueba.txt C:\prueba-scp\descargado.txt
 Get-ChildItem C:\prueba-scp
 ```
-*(Si PowerShell dice que `scp` no existe, ábrelo como Administrador y ejecuta: `Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0`).*
+
 
 ---
 
