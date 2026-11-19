@@ -139,9 +139,9 @@ sudo tree -L 2 -d /
 
 ## PUNTO 5: SERVIDOR WEB APACHE (`httpd`)
 
-### 5.1. Instalar, abrir Firewall y crear página con `nombre_apellido`
+### 5.1. Iniciar Apache, abrir Firewall y editar la página
 > [!IMPORTANT]
-> **CENTOS** — Guardar `index.html` con `Ctrl + O`, `Enter` y salir con `Ctrl + X`.
+> **CENTOS** — Guardar con `Ctrl + O`, `Enter` y salir con `Ctrl + X`.
 
 ```bash
 sudo systemctl enable --now httpd
@@ -149,33 +149,37 @@ sudo firewall-cmd --permanent --zone=public --add-service=http
 sudo firewall-cmd --reload
 sudo nano /var/www/html/index.html
 ```
-Pegar dentro:
+
+Pegar dentro del archivo:
 ```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Servidor Apache</title>
+    <title>HTTP Server Test Page - jose_ochoa</title>
 </head>
 <body>
-    <h1>Servidor Apache funcionando correctamente</h1>
-    <h2>Estudiante: JOSE JULIAN OCHOA (jose_ochoa)</h2>
-    <p>Sistema operativo: CentOS Stream 10</p>
+    <h1>HTTP Server Test Page - jose_ochoa (JOSE JULIAN OCHOA)</h1>
+    <p>Servidor Apache funcionando correctamente en CentOS Stream 10.</p>
 </body>
 </html>
 ```
-Aplicar permisos SELinux y reiniciar:
+
+Aplicar permisos SELinux y reiniciar Apache:
 ```bash
 sudo restorecon -Rv /var/www/html
+
 sudo systemctl restart httpd
 ```
 
-### 5.2. Comprobar en el navegador (Evidencia)
+### 5.2. Comprobar en el navegador de Windows (Evidencia)
 > [!TIP]
-> **NAVEGADOR DE WINDOWS** — Entra a la siguiente dirección y toma captura donde se vea la IP y `jose_ochoa`:
+> **NAVEGADOR DE WINDOWS** — Entra a la dirección de tu servidor y toma captura donde se vea **`jose_ochoa`**:
 
 ```text
 http://TU_IP
+```
+
 ```
 
 ---
