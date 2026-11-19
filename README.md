@@ -144,7 +144,6 @@ sudo tree -L 2 -d /
 > **CENTOS** — Guardar `index.html` con `Ctrl + O`, `Enter` y salir con `Ctrl + X`.
 
 ```bash
-sudo cp -a /etc/httpd/conf/httpd.conf /etc/httpd/conf/httpd.conf.backup
 sudo systemctl enable --now httpd
 sudo firewall-cmd --permanent --zone=public --add-service=http
 sudo firewall-cmd --reload
