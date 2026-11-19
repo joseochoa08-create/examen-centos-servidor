@@ -8,6 +8,7 @@
 * **Morado (`CENTOS`):** Terminal de CentOS.
 * **Azul (`POWERSHELL`):** PowerShell en Windows.
 * **Verde (`FILEZILLA / NAVEGADOR`):** En Windows.
+* **Regla:** Reemplaza `TU_USUARIO`, `TU_IP` y `TU_PUERTO` directamente por tus datos reales (sin signos extra).
 
 ---
 
@@ -18,7 +19,7 @@ Apagar CentOS > **Configuración > Red > Adaptador 1** > Cambiar a **Adaptador p
 
 ### B. Ver tu IP y tu Usuario (En terminal de CentOS)
 > [!IMPORTANT]
-> **CENTOS** — Anota el nombre que sale en `whoami` (`<USUARIO>`) y la IP que sale al lado de `enp0s3` (`<IP_DEL_SERVIDOR>`).
+> **CENTOS** — Anota el nombre que sale en `whoami` (`TU_USUARIO`) y la IP que sale al lado de `enp0s3` (`TU_IP`).
 
 ```bash
 whoami
@@ -51,32 +52,33 @@ ping -c 10 8.8.8.8
 
 ### 2.1. Configurar puerto en CentOS
 > [!IMPORTANT]
-> **CENTOS** — Abrir el archivo, cambiar `Port 22` por `Port <PUERTO>` (ej. `Port 2222`), guardar con `Ctrl + O`, `Enter` y salir con `Ctrl + X`.
+> **CENTOS** — Abrir el archivo, cambiar `Port 22` por `Port TU_PUERTO` (ej. `Port 2222`), guardar con `Ctrl + O`, `Enter` y salir con `Ctrl + X`.
 
 ```bash
+sudo cp -a /etc/ssh/sshd_config /etc/ssh/sshd_config.backup
 sudo nano /etc/ssh/sshd_config
 ```
 
 ### 2.2. Abrir puerto en SELinux, Firewall y validar SSH
 > [!IMPORTANT]
-> **CENTOS** — Reemplaza `<PUERTO>` por el número que te pida el profesor.
+> **CENTOS** — Reemplaza `TU_PUERTO` por el número limpio (ejemplo: `2222`). Fíjate que en `semanage` va solo el número y en `firewall-cmd` lleva `/tcp`.
 
 ```bash
-sudo semanage port -a -t ssh_port_t -p tcp <PUERTO>
-sudo firewall-cmd --permanent --zone=public --add-port=<PUERTO>/tcp
+sudo semanage port -a -t ssh_port_t -p tcp TU_PUERTO
+sudo firewall-cmd --permanent --zone=public --add-port=TU_PUERTO/tcp
 sudo firewall-cmd --reload
 sudo sshd -t
 sudo systemctl restart sshd
-sudo ss -tlnp | grep <PUERTO>
+sudo ss -tlnp | grep TU_PUERTO
 ```
 *(Nota: `sudo sshd -t` comprueba que no haya errores de escritura; si no muestra nada, todo está bien).*
 
 ### 2.3. Conectarse desde Windows (Evidencia)
 > [!NOTE]
-> **POWERSHELL** — Ingresa contraseña, **toma captura dentro del servidor** y luego escribe `exit`.
+> **POWERSHELL** — Ingresa tu contraseña, **toma captura dentro del servidor** y luego escribe `exit`.
 
 ```powershell
-ssh -p <PUERTO> <USUARIO>@<IP_DEL_SERVIDOR>
+ssh -p TU_PUERTO TU_USUARIO@TU_IP
 ```
 
 ---
@@ -91,10 +93,10 @@ Set-Location C:\prueba-scp
 "Archivo de prueba" | Out-File -Encoding utf8 prueba.txt
 
 # 1. Subir de Windows a CentOS:
-scp -P <PUERTO> C:\prueba-scp\prueba.txt <USUARIO>@<IP_DEL_SERVIDOR>:/home/<USUARIO>/
+scp -P TU_PUERTO C:\prueba-scp\prueba.txt TU_USUARIO@TU_IP:/home/TU_USUARIO/
 
 # 2. Descargar de CentOS a Windows:
-scp -P <PUERTO> <USUARIO>@<IP_DEL_SERVIDOR>:/home/<USUARIO>/prueba.txt C:\prueba-scp\descargado.txt
+scp -P TU_PUERTO TU_USUARIO@TU_IP:/home/TU_USUARIO/prueba.txt C:\prueba-scp\descargado.txt
 Get-ChildItem C:\prueba-scp
 ```
 *(Si PowerShell dice que `scp` no existe, ábrelo como Administrador y ejecuta: `Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0`).*
@@ -170,7 +172,7 @@ sudo systemctl restart httpd
 > **NAVEGADOR DE WINDOWS** — Entra a la siguiente dirección y toma captura donde se vea la IP y `jose_ochoa`:
 
 ```text
-http://<IP_DEL_SERVIDOR>
+http://TU_IP
 ```
 
 ---
@@ -219,7 +221,7 @@ sudo systemctl restart vsftpd
 > [!TIP]
 > **FILEZILLA (EN WINDOWS)** — Llena la barra superior y haz clic en **Conexión rápida** *(si falla al listar carpetas, activar modo **Pasivo** en Edición > Opciones > FTP)*:
 
-* **Servidor:** `<IP_DEL_SERVIDOR>`
+* **Servidor:** `TU_IP`
 * **Nombre de usuario:** `ftpusuario`
 * **Contraseña:** *(la que creaste en el paso 6.1)*
 * **Puerto:** `21`
@@ -237,4 +239,4 @@ Arrastra un archivo de izquierda a derecha (**subir**) y otro de derecha a izqui
 > sudo nmcli connection modify enp0s8 ipv4.method manual ipv4.addresses 192.168.56.101/24
 > sudo nmcli connection up enp0s8
 > ```
-> 3. Usar `192.168.56.101` como `<IP_DEL_SERVIDOR>` desde Windows.
+> 3. Usar `192.168.56.101` como `TU_IP` desde Windows.
