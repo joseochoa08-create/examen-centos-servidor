@@ -138,58 +138,52 @@ sudo tree -L 2 -d /
 ---
 ## PUNTO 5: SERVIDOR WEB APACHE (`httpd`)
 
-### 5.1. Iniciar Apache, abrir Firewall y crear el `index.html`
+### 5.1. Iniciar Apache, abrir Firewall y editar la página oficial de CentOS
 > [!IMPORTANT]
-> **CENTOS** — Guardar con `Ctrl + O`, `Enter` y salir con `Ctrl + X`.
+> **CENTOS** — Inserta automáticamente tu **`jose_ochoa`** dentro de la página oficial original de prueba de CentOS sin perder sus colores ni diseño.
 
 ```bash
 sudo systemctl enable --now httpd
 sudo firewall-cmd --permanent --zone=public --add-service=http
 sudo firewall-cmd --reload
-sudo nano /var/www/html/index.html
-```
-
-Pegar este código completo dentro de `index.html`:
-```html
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>HTTP Server Test Page - jose_ochoa</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 0; background: #f4f4f4; color: #333; }
-        .header { background: #294172; color: white; padding: 30px; text-align: center; }
-        .content { max-width: 800px; margin: 30px auto; background: white; padding: 30px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        h1 { margin: 0; font-size: 28px; }
-        .badge { background: #e8f0fe; color: #1967d2; padding: 8px 12px; border-radius: 4px; display: inline-block; margin-top: 10px; font-weight: bold; }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>HTTP Server Test Page</h1>
-        <div class="badge">Estudiante: jose_ochoa | JOSE JULIAN OCHOA</div>
-    </div>
-    <div class="content">
-        <h2>Servidor Web Apache funcionando correctamente</h2>
-        <p>Esta página confirma que el servicio <strong>Apache HTTP Server (httpd)</strong> está activo y configurado correctamente en <strong>CentOS Stream 10</strong>.</p>
-    </div>
-</body>
-</html>
-```
-
-Aplicar permisos SELinux y reiniciar Apache:
-```bash
-sudo restorecon -Rv /var/www/html
+sudo rm -f /var/www/html/index.html
+sudo sed -i 's/CentOS/CentOS - jose_ochoa (JOSE JULIAN OCHOA)/g' /usr/share/httpd/noindex/index.html
+sudo restorecon -Rv /usr/share/httpd/noindex
 sudo systemctl restart httpd
 ```
 
+> **Si prefieres crear un archivo `index.html` nuevo desde cero en `/var/www/html/index.html`:**
+> ```bash
+> sudo nano /var/www/html/index.html
+> ```
+> Pegar este código, guardar con `Ctrl + O`, `Enter` y salir con `Ctrl + X`:
+> ```html
+> <!DOCTYPE html>
+> <html lang="es">
+> <head>
+>     <meta charset="UTF-8">
+>     <title>HTTP Server Test Page - jose_ochoa</title>
+> </head>
+> <body>
+>     <h1>HTTP Server Test Page - jose_ochoa (JOSE JULIAN OCHOA)</h1>
+>     <p>Servidor Apache funcionando correctamente en CentOS Stream 10.</p>
+> </body>
+> </html>
+> ```
+> Aplicar permisos y reiniciar:
+> ```bash
+> sudo restorecon -Rv /var/www/html
+> sudo systemctl restart httpd
+> ```
+
 ### 5.2. Comprobar en el navegador de Windows (Evidencia)
 > [!TIP]
-> **NAVEGADOR DE WINDOWS** — Entra a la dirección de tu servidor y toma captura donde se vea **`jose_ochoa`**:
+> **NAVEGADOR DE WINDOWS** — Entra a la dirección de tu servidor, presiona `Ctrl + F5` y toma captura donde se vea **`jose_ochoa`**:
 
 ```text
 http://TU_IP
 ```
+
 
 
 ## PUNTO 6: SERVIDOR FTP (`vsftpd`) + FILEZILLA
